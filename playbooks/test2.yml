@@ -1,0 +1,13 @@
+---
+- name: Test
+  hosts: docker_hosts
+  become: true
+  vars:
+    envs:
+      sina:shima
+      sima:bina
+
+  tasks:
+    - name: Test
+      ansible.builtin.debug:
+        msg: "{{ envs }}"

@@ -1,0 +1,41 @@
+---
+- name: Handle envs
+  ansible.builtin.set_fact:
+    docker_ports: "{{ docker_ports_vars | default([]) }}"
+    docker_networks: "{{ docker_networks_vars | default([]) }}"
+    docker_links: "{{ docker_links_vars | default([]) }}"
+
+- name: Debug env, volumes, ports, networks, and links
+  ansible.builtin.debug:
+    msg:
+      env: "{{ docker_env }}"
+      volumes: "{{ docker_volumes }}"
+      ports: "{{ docker_ports }}"
+      networks: "{{ docker_networks }}"
+      links: "{{ docker_links }}"
+
+- name: Create the container
+  community.docker.docker_container:
+    name: "{{ docker_name }}"
+    image: "{{ docker_image }}"
+    state: "{{ docker_state }}"
+    restart_policy: "{{ docker_restart_policy }}"
+    command: "{{ docker_command }}"
+    entrypoint: "{{ docker_entrypoint }}"
+    network_mode: "{{ docker_network_mode }}"
+    working_dir: "{{ docker_workdir }}"
+    cpu_period: "{{ docker_cpu_period }}"
+    cpu_quota: "{{ docker_cpu_quota }}"
+    cpus: "{{ docker_cpus }}"
+    memory: "{{ docker_memory }}"
+    detach: "{{ docker_detach }}"
+    env: {"{{ docker_env }}"}
+    volumes: ["{{ docker_volumes }}"]
+    ports: "{{ docker_ports }}"
+    networks: "{{ docker_networks }}"
+    links: "{{ docker_links }}"
+  register: container_info
+
+- name: Create_result
+  ansible.builtin.debug:
+    var: container_info

@@ -1,0 +1,12 @@
+---
+- name: Test
+  hosts: docker_hosts
+  become: true
+  roles:
+    - role: docker_container_create
+      vars:
+        docker_name: sina
+        docker_image: docker.arvancloud.ir/hello-world
+        docker_env: "sina:{{ 'mina' }} shima:{{ 'bina' }}"
+        docker_ports_vars:
+          - 9090:9090

@@ -1,0 +1,88 @@
+---
+- name: Install ca-certificates and curl
+  ansible.builtin.apt:
+    name: "{{ packages }}"
+    update_cache: true
+  vars:
+    packages:
+      - ca-certificates
+      - curl
+  register: install_ca_certificates_and_curl_result
+
+- name: ca-certificates and curl installation log
+  ansible.builtin.debug:
+    msg: "{{ install_ca_certificates_and_curl_result }}"
+
+- name: Create the /etc/apt/keyrings directory
+  ansible.builtin.file:
+    path: "{{ keyring_directory }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  register: create_keyring_dir_result
+
+- name: Log keyring directory creation result
+  ansible.builtin.debug:
+    msg: "{{ create_keyring_dir_result }}"
+
+- name: Check if Docker GPG keyring already exists
+  ansible.builtin.stat:
+    path: "{{ docker_keyring }}"
+  register: docker_keyring_info
+
+- name: Log Docker GPG keyring check result
+  ansible.builtin.debug:
+    msg: "{{ docker_keyring_info }}"
+
+- name: Download Docker GPG key if not present
+  ansible.builtin.shell: >
+    proxychains curl -fsSL "{{ docker_gpg_url }}" -o "{{ docker_keyring }}"
+  args:
+    executable: /bin/bash
+  when: not docker_keyring_info.stat.exists
+  register: download_key_result
+
+- name: Log Docker GPG key download result
+  ansible.builtin.debug:
+    msg: "{{ download_key_result }}"
+
+- name: Change docker_keyring file permissions
+  ansible.builtin.file:
+    path: "{{ docker_keyring }}"
+    mode: '0444'
+  register: change_permissions_result
+
+- name: Log change permissions result
+  ansible.builtin.debug:
+    msg: "{{ change_permissions_result }}"
+
+- name: Retrieve system architecture info
+  ansible.builtin.command: dpkg --print-architecture
+  register: os_architecture
+
+- name: Log architecture retrieval result
+  ansible.builtin.debug:
+    msg: "os architecture: {{ os_architecture.stdout }}"
+
+- name: Add Docker repository to APT sources
+  ansible.builtin.template:
+    src: docker.list.j2
+    dest: /etc/apt/sources.list.d/docker.list
+    mode: '0644'
+    owner: root
+    group: root
+  register: add_repo_result
+
+- name: Log Docker repository addition result
+  ansible.builtin.debug:
+    msg: "{{ add_repo_result }}"
+
+- name: Install docker
+  ansible.builtin.shell: |
+    proxychains apt update && proxychains apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  register: install_docker_packages
+
+- name: Log Docker installation result
+  ansible.builtin.debug:
+    msg: "Result of Docker installation: {{ install_docker_packages }}"

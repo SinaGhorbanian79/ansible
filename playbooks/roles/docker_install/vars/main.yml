@@ -1,0 +1,5 @@
+---
+docker_gpg_url: "https://download.docker.com/linux/debian/gpg"
+docker_keyring: "/etc/apt/keyrings/docker.asc"
+keyring_directory: "/etc/apt/keyrings"
+os_info_file: "/etc/os-release"

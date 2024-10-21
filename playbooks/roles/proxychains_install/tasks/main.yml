@@ -1,0 +1,11 @@
+---
+- name: Install Proxychain
+  ansible.builtin.apt:
+    update_cache: true
+    name: proxychains
+  register: proxychains_install_log
+  become: true
+
+- name: Installation log
+  ansible.builtin.debug:
+    var: proxychains_install_log

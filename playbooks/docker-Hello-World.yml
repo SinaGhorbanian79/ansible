@@ -1,0 +1,42 @@
+---
+- name: Check, Pull and Run a Docker Image
+  hosts: docker_hosts
+  become: true
+  vars:
+    image: docker.arvancloud.ir/hello-world
+  tasks:
+    - name: Check if Image Already Exists
+      community.docker.docker_image_info:
+        name: "{{ image }}"
+      register: image_info
+
+    - name: Check_result
+      ansible.builtin.debug:
+        msg: >
+          {% if image_info is not defined or image_info.images | length == 0 %}
+            the image '{{ image }}' doesn't exists
+          {% else %}
+            the image '{{ image }}' exist
+          {% endif %}
+
+    - name: Pull the image
+      community.docker.docker_image:
+        name: "{{ image }}"
+        source: pull
+        tag: "latest"
+      when: image_info.images | length == 0
+      register: pull_result
+
+    - name: Pull_result
+      ansible.builtin.debug:
+        var: pull_result
+
+    - name: Create the container
+      community.docker.docker_container:
+        name: Hello-World
+        image: "{{ image }}"
+      register: container_info
+
+    - name: Create_result
+      ansible.builtin.debug:
+        var: container_info
