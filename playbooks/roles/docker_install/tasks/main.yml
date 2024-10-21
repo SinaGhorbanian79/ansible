@@ -9,7 +9,7 @@
       - curl
   register: install_ca_certificates_and_curl_result
 
-- name: ca-certificates and curl installation log
+- name: Ca-certificates and curl installation log
   ansible.builtin.debug:
     msg: "{{ install_ca_certificates_and_curl_result }}"
 

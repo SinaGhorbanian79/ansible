@@ -3,6 +3,12 @@
   hosts: docker_hosts
   become: true
   roles:
+    - role: proxychains_install
+
+    - role: proxychains_configure
+
+    - role: docker_install
+
     - role: docker_image_pull
       vars:
         docker_image: docker.arvancloud.ir/mariadb
