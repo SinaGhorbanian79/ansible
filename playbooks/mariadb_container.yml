@@ -1,0 +1,32 @@
+---
+- name: Create and start MariaDb container
+  hosts: docker_hosts
+  become: true
+  roles:
+    - role: docker_image_pull
+      vars:
+        docker_image: docker.arvancloud.ir/mariadb
+        docker_image_tag: latest
+
+    - role: docker_container_create
+      vars:
+        container_name: "mariadb1"
+        container_image: "docker.arvancloud.ir/mariadb"
+        container_state: "present"
+        container_restart_policy: "always"
+        container_network_mode: "bridge"
+        container_memory: "2g"
+        container_detach: "true"
+        container_published_ports:
+          - "3306:3306"
+        container_envs:
+          MARIADB_USER: "sina"
+          MARIADB_PASSWORD: "Password123"
+          MARIADB_DATABASE: "test"
+          MARIADB_ROOT_PASSWORD: "Password123"
+        container_volumes:
+          - "mariadb:/var/lib/mysql"
+
+    - role: docker_container_start
+      vars:
+        container_name: "mariadb1"

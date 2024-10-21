@@ -1,41 +1,23 @@
----
-- name: Handle envs
-  ansible.builtin.set_fact:
-    docker_ports: "{{ docker_ports_vars | default([]) }}"
-    docker_networks: "{{ docker_networks_vars | default([]) }}"
-    docker_links: "{{ docker_links_vars | default([]) }}"
-
-- name: Debug env, volumes, ports, networks, and links
-  ansible.builtin.debug:
-    msg:
-      env: "{{ docker_env }}"
-      volumes: "{{ docker_volumes }}"
-      ports: "{{ docker_ports }}"
-      networks: "{{ docker_networks }}"
-      links: "{{ docker_links }}"
-
-- name: Create the container
+- name: Create docker container
   community.docker.docker_container:
-    name: "{{ docker_name }}"
-    image: "{{ docker_image }}"
-    state: "{{ docker_state }}"
-    restart_policy: "{{ docker_restart_policy }}"
-    command: "{{ docker_command }}"
-    entrypoint: "{{ docker_entrypoint }}"
-    network_mode: "{{ docker_network_mode }}"
-    working_dir: "{{ docker_workdir }}"
-    cpu_period: "{{ docker_cpu_period }}"
-    cpu_quota: "{{ docker_cpu_quota }}"
-    cpus: "{{ docker_cpus }}"
-    memory: "{{ docker_memory }}"
-    detach: "{{ docker_detach }}"
-    env: {"{{ docker_env }}"}
-    volumes: ["{{ docker_volumes }}"]
-    ports: "{{ docker_ports }}"
-    networks: "{{ docker_networks }}"
-    links: "{{ docker_links }}"
-  register: container_info
+    name: "{{ container_name }}"
+    image: "{{ container_image }}"
+    state: "{{ container_state }}"
+    restart_policy: "{{ container_restart_policy }}"
+    network_mode: "{{ container_network_mode }}"
+    working_dir: "{{ container_workdir }}"
+    cpu_period: "{{ container_cpu_period }}"
+    cpu_quota: "{{ container_cpu_quota }}"
+    memory: "{{ container_memory }}"
+    detach: "{{ container_detach }}"
+    exposed_ports:
+      - "{{ container_exposed_ports | map('split', ':') | map(attribute=0) | list }}"
+    published_ports: "{{ container_published_ports }}"
+    env: "{{ container_envs }}"
+    volumes: "{{ container_volumes }}"
+  when: container_state == "present"
+  register: container_creation_log
 
-- name: Create_result
+- name: Container creation log
   ansible.builtin.debug:
-    var: container_info
+    msg: "{{ container_creation_log }}"

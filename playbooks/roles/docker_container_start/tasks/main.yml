@@ -1,0 +1,10 @@
+---
+- name: Start the Docker container
+  community.docker.docker_container:
+    name: "{{ container_name }}"
+    state: started
+  register: startup_log
+
+- name: Container startup log
+  ansible.builtin.debug:
+    msg: "{{ startup_log }}"

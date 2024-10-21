@@ -1,18 +1,14 @@
-docker_name: "my_container"                  # Name of the container
-docker_image: "my_image"                     # Docker image to use
-docker_state: "started"                      # Options: started, stopped, present, absent, restarted
-docker_restart_policy: "always"              # Restart policy (none, always, unless-stopped, on-failure)
-docker_command: "/bin/bash"                  # Command to run in the container
-docker_entrypoint: "/usr/local/bin/myapp"    # Override default entrypoint
- # docker_env: {}                          # Environment variables
-docker_volumes: []                           # Mount volumes (host:container)
-docker_ports: []                             # Map container ports to host
-docker_network_mode: "bridge"                # Network mode (bridge, host, none, etc.)
-docker_networks: []                          # Attach to one or more custom networks
-docker_workdir: "/app"                       # Set working directory inside container
-docker_links: []                             # Link to other containers
-docker_cpu_period: "100000"                  # CPU period for limiting container CPU usage
-docker_cpu_quota: "70000"                    # CPU quota in microseconds
-docker_cpus: "2.0"                           # Number of CPUs to assign
-docker_memory: "1g"                          # Memory limit
-docker_detach: "true"                        # Run container in detached mode
+container_image: ""
+container_name: "my_container"
+container_state: "present"
+container_restart_policy: "no"
+container_workdir: ""
+container_cpu_period: "100000"
+container_cpu_quota: "70000"
+container_memory: "1g"
+container_detach: "true"
+container_network_mode: "bridge"
+container_exposed_ports: []
+container_published_ports: []
+container_envs: {}
+container_volumes: []
