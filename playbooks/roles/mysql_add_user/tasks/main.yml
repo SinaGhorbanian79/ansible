@@ -1,0 +1,25 @@
+---
+- name: Install dependencies
+  ansible.builtin.apt:
+    update_cache: true
+    name: python3-pymysql
+  register: python3_pymysql_install_log
+
+- name: Install dependencies log
+  ansible.builtin.debug:
+    msg: "{{ python3_pymysql_install_log }}"
+
+- name: Create database user with name, password and database privileges
+  community.mysql.mysql_user:
+    name: "{{ database_user }}"
+    password: "{{ database_password }}"
+    priv: "{{ database_name }}.*:{{ database_privileges }}"
+    host: "{{ database_host }}"
+    login_user: "{{ login_username }}"
+    login_password: "{{ login_password }}"
+    state: present
+  register: user_creation_log
+
+- name: Database create user log
+  ansible.builtin.debug:
+    msg: "{{ user_creation_log }}"

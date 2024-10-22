@@ -1,0 +1,14 @@
+---
+- name: Create database users
+  hosts: docker_hosts
+  become: true
+  roles:
+    - role: mysql_add_user
+      vars:
+        database_user: "sinagh79"
+        database_password: "sina123"
+        database_name: "test"
+        database_privileges: "ALL"
+        database_host: "localhost"
+        login_username: "root"
+        login_password: "Password123"

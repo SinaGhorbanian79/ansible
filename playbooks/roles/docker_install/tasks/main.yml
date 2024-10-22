@@ -86,3 +86,16 @@
 - name: Log Docker installation result
   ansible.builtin.debug:
     msg: "Result of Docker installation: {{ install_docker_packages }}"
+
+- name: Copy the repo
+  ansible.builtin.copy:
+    src: /etc/apt/sources.list.d/docker.list
+    dest: /etc/apt/sources.list.d/docker.list.disabled
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: Remove the old repo file
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/docker.list
+    state: absent
