@@ -1,0 +1,1 @@
+This is a role to push images to a custom registry

@@ -1,0 +1,7 @@
+---
+- name: Tag and push to local registry
+  community.docker.docker_image:
+    name: "{{ source_registry }}/{{ image_name }}:{{ image_tag }}"
+    repository: "{{ target_registry }}/{{ image_name }}:{{ image_tag }}"
+    push: true
+    source: pull

@@ -1,0 +1,12 @@
+---
+- name: Pull The Image
+  hosts: localhost
+  connection: local
+  become: true
+  roles:
+    - role: docker_image_push
+      vars:
+        source_registry: ""
+        target_registry: ""
+        image_name: ""
+        image_tag: ""

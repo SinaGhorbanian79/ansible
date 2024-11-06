@@ -1,0 +1,6 @@
+---
+- name: Tag image for target registry
+  community.docker.docker_image:
+    name: "{{ source_registry }}/{{ image_name }}:{{ image_tag }}"
+    tag: "{{ target_registry }}/{{ image_name }}:{{ image_tag }}"
+    source: local
