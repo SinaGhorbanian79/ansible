@@ -91,6 +91,7 @@
   ansible.builtin.copy:
     src: /etc/apt/sources.list.d/docker.list
     dest: /etc/apt/sources.list.d/docker.list.disabled
+    remote_src: true
     mode: '0644'
     owner: root
     group: root

@@ -1,7 +1,11 @@
 ---
-- name: Tag and push to local registry
+- name: Push to private registry
   community.docker.docker_image:
-    name: "{{ source_registry }}/{{ image_name }}:{{ image_tag }}"
-    repository: "{{ target_registry }}/{{ image_name }}:{{ image_tag }}"
+    name: "{{ dest_registry }}/{{ dest_image_name }}:{{ dest_image_tag }}"
     push: true
-    source: pull
+    source: local
+  register: push_log
+
+- name: Push log
+  ansible.builtin.debug:
+    msg: '{{ push_log }}'

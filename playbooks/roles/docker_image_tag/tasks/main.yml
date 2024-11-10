@@ -1,6 +1,12 @@
 ---
 - name: Tag image for target registry
   community.docker.docker_image:
-    name: "{{ source_registry }}/{{ image_name }}:{{ image_tag }}"
-    tag: "{{ target_registry }}/{{ image_name }}:{{ image_tag }}"
+    name: "{{ source_image_full }}:{{ source_image_tag }}"
+    repository: "{{ dest_registry }}/{{ dest_image_name }}"
+    tag: "{{ dest_image_tag }}"
     source: local
+  register: tag_log
+
+- name: Tag log
+  ansible.builtin.debug:
+    msg: '{{ tag_log }}'

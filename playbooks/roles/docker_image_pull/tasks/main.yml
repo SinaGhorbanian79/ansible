@@ -1,7 +1,7 @@
 ---
 - name: Check if the Docker image exists
   community.docker.docker_image_info:
-    name: "{{ docker_image }}"
+    name: "{{ docker_image_name }}:{{ docker_image_tag }}"
   register: image_info
 
 - name: Set image_exists variable based on whether the image exists
@@ -12,14 +12,14 @@
   ansible.builtin.debug:
     msg: >
       {% if image_exists == '0' %}
-        The image '{{ docker_image }}' doesn't exist.
+        The image '{{ docker_image_name }}' doesn't exist.
       {% else %}
-        The image '{{ docker_image }}' already exists. No need to pull.
+        The image '{{ docker_image_name }}' already exists. No need to pull.
       {% endif %}
 
 - name: Pull the image
   community.docker.docker_image:
-    name: "{{ docker_image }}"
+    name: "{{ docker_image_name }}"
     source: pull
     tag: "{{ docker_image_tag }}"
   register: pull_result
