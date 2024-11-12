@@ -1,34 +1,83 @@
 ---
+
 - name: Pull image in remote server and push it to private registry
   hosts: docker_hosts
   become: true
-  roles:
-    - role: docker_image_pull
-      vars:
-        docker_image_name: "{{ source_image_full }}"
-        docker_image_tag: "{{ source_image_tag }}"
+  tasks:
 
-    - role: docker_image_tag
-      vars:
-        source_image_full: ""
-        source_image_tag: ""
-        dest_registry: ""
-        dest_image_name: ""
-        dest_image_tag: ""
+    - name: Pull the image
+      community.docker.docker_image:
+        name: "{{ source_image_full }}"
+        source: pull
+        tag: "{{ source_image_tag }}"
+      register: pull_result
 
-    - role: docker_image_push
-      vars:
-        dest_registry: ""
-        dest_image_name: ""
-        dest_image_tag: ""
+    - name: Pull the image result
+      ansible.builtin.debug:
+        msg: >
+          {% if pull_result.changed %}
+            The image '{{ source_image_full }}:{{ source_image_tag }}' didn't exist and was pulled.
+          {% else %}
+            The image '{{ source_image_full }}:{{ source_image_tag }}' already existed.
+          {% endif %}
+          Result: {{ pull_result }}
+      ignore_errors: true
 
-    - role: docker_image_delete
-      vars:
-        docker_image_name: "{{ dest_registry }}/{{ dest_image_name }}"
-        docker_image_tag: "{{ dest_image_tag }}"
+    - name: Tag and push image to target registry
+      community.docker.docker_image:
+        name: "{{ source_image_full }}:{{ source_image_tag }}"
+        repository: "{{ dest_image_full }}:{{ dest_image_tag }}"
+        push: true
+        source: local
+      register: tag_push_result
+      ignore_errors: true
 
-    - role: docker_image_delete
-      vars:
-        docker_image_name: "{{ source_image_full }}"
-        docker_image_tag: "{{ source_image_tag }}"
-      when: image_exists == '0'
+    - name: Tag and push image to target registry result
+      ansible.builtin.debug:
+        msg: >
+          {% if tag_push_result is succeeded or tag_push_result.changed %}
+            Image '{{ source_image_full }}:{{ source_image_tag }}' was tagged and pushed to '{{ dest_image_full }}:{{ dest_image_tag }}'.
+          {% else %}
+            Couldn't tag or push image
+          {% endif %}
+          Result: {{ tag_push_result }}
+      ignore_errors: true
+
+    - name: Delete the source Docker image
+      community.docker.docker_image:
+        name: "{{ source_image_full }}"
+        tag: "{{ source_image_tag }}"
+        state: absent
+      register: source_image_delete_result
+      when: pull_result.changed
+      ignore_errors: true
+
+    - name: Delete the source Docker image result
+      ansible.builtin.debug:
+        msg: >
+          {% if source_image_delete_result.changed %}
+            Removed image '{{ source_image_full }}:{{ source_image_tag }}'
+          {% else %}
+            Image '{{ source_image_full }}:{{ source_image_tag }}' was already present so it won't be removed
+          {% endif %}
+          Result: {{ source_image_delete_result }}
+      when: source_image_delete_result is defined
+      ignore_errors: true
+
+    - name: Delete the dest Docker image
+      community.docker.docker_image:
+        name: "{{ dest_image_full }}"
+        tag: "{{ dest_image_tag }}"
+        state: absent
+      register: dest_image_delete_result
+      ignore_errors: true
+
+    - name: Delete the dest Docker image result
+      ansible.builtin.debug:
+        msg: >
+          {% if dest_image_delete_result.changed %}
+            Removed image '{{ dest_image_full }}:{{ dest_image_tag }}'
+          {% else %}
+            Couldn't delete image '{{ dest_image_full }}:{{ dest_image_tag }}'
+          {% endif %}
+          Result: {{ dest_image_delete_result }}
