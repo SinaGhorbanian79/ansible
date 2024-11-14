@@ -1,0 +1,75 @@
+---
+- name: Manage ssh keys based on user or server
+  hosts: docker_hosts
+  become: true
+  tasks:
+    - name: See if user exists
+      ansible.builtin.user:
+        name: "{{ item }}"
+        state: present
+      check_mode: true
+      register: user_check
+      loop: "{{ hostvars[inventory_hostname].users }}"
+      ignore_errors: true
+
+    - name: Initialize counter variable
+      ansible.builtin.set_fact:
+        user_not_found_count: 0
+
+    - name: Check user existence and update count
+      ansible.builtin.set_fact:
+        user_not_found_count: "{{ user_not_found_count | int + 1 }}"
+      when: item.name is not defined
+      loop: "{{ user_check.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Print user existence details
+      ansible.builtin.debug:
+        msg: >
+          {% if item.name is not defined %}
+            The user {{ item.item }} doesn't exist on the server. Please create it first.
+          {% else %}
+            The user {{ item.item }} exists on the server.
+          {% endif %}
+      loop: "{{ user_check.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Print message before exiting if users are missing
+      ansible.builtin.debug:
+        msg: "One or more users are missing. The playbook will exit."
+      when: (user_not_found_count | int) > 0
+
+    - name: Exit playbook if users are missing
+      ansible.builtin.meta: end_play
+      when: (user_not_found_count | int) > 0
+
+    - name: Check if directory exists and create if it doesn't
+      ansible.builtin.file:
+        path: /home/{{ item }}/.ssh
+        state: directory
+        mode: '0700'
+        owner: "{{ item }}"
+        group: "{{ item }}"
+      loop: "{{ hostvars[inventory_hostname].users }}"
+      loop_control:
+        label: "{{ item }}"
+
+    - name: Copy file to destination
+      ansible.builtin.copy:
+        src: /home/sinagh79/ansible/playbooks/files/keys/{{ item.item }}/authorized_keys
+        dest: /home/{{ item.item }}/.ssh/authorized_keys
+        mode: '0600'
+        remote_src: false
+      register: copy_result
+      loop: "{{ user_check.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Copy result
+      ansible.builtin.debug:
+        msg: "Updated {{ item.item.home }}/.ssh/authorized_keys file"
+      loop: "{{ copy_result.results }}"
+      loop_control:
+        label: "{{ item.item.item }}"
