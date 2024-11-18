@@ -58,7 +58,7 @@
 
     - name: Copy file to destination
       ansible.builtin.copy:
-        src: ./playbooks/files/keys/{{ item.item }}/authorized_keys
+        src: ./files/keys/{{ item.item }}/authorized_keys
         dest: /home/{{ item.item }}/.ssh/authorized_keys
         mode: '0600'
         remote_src: false
