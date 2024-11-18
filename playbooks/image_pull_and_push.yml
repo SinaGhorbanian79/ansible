@@ -7,26 +7,31 @@
 
     - name: Pull the image
       community.docker.docker_image:
-        name: "{{ source_image_full }}"
+        name: "{{ source_image }}"
         source: pull
-        tag: "{{ source_image_tag }}"
       register: pull_result
 
     - name: Pull the image result
       ansible.builtin.debug:
         msg: >
           {% if pull_result.changed %}
-            The image '{{ source_image_full }}:{{ source_image_tag }}' didn't exist and was pulled.
+            The image '{{ source_image }}' didn't exist and was pulled.
           {% else %}
-            The image '{{ source_image_full }}:{{ source_image_tag }}' already existed.
+            The image '{{ source_image }}' already existed.
           {% endif %}
           Result: {{ pull_result }}
+
+    - name: Log in to the private registry
+      community.docker.docker_login:
+        registry_url: '{{ dest_image }}'
+        username: '{{ username }}'
+        password: '{{ password }}'
       ignore_errors: true
 
     - name: Tag and push image to target registry
       community.docker.docker_image:
-        name: "{{ source_image_full }}:{{ source_image_tag }}"
-        repository: "{{ dest_image_full }}:{{ dest_image_tag }}"
+        name: "{{ source_image }}"
+        repository: "{{ dest_image }}"
         push: true
         source: local
       register: tag_push_result
@@ -36,7 +41,7 @@
       ansible.builtin.debug:
         msg: >
           {% if tag_push_result is succeeded or tag_push_result.changed %}
-            Image '{{ source_image_full }}:{{ source_image_tag }}' was tagged and pushed to '{{ dest_image_full }}:{{ dest_image_tag }}'.
+            Image '{{ source_image }}' was tagged and pushed to '{{ dest_image }}'.
           {% else %}
             Couldn't tag or push image
           {% endif %}
@@ -45,8 +50,7 @@
 
     - name: Delete the source Docker image
       community.docker.docker_image:
-        name: "{{ source_image_full }}"
-        tag: "{{ source_image_tag }}"
+        name: "{{ source_image }}"
         state: absent
       register: source_image_delete_result
       when: pull_result.changed
@@ -56,9 +60,9 @@
       ansible.builtin.debug:
         msg: >
           {% if source_image_delete_result.changed %}
-            Removed image '{{ source_image_full }}:{{ source_image_tag }}'
+            Removed image '{{ source_image }}'
           {% else %}
-            Image '{{ source_image_full }}:{{ source_image_tag }}' was already present so it won't be removed
+            Image '{{ source_image }}' was already present so it won't be removed
           {% endif %}
           Result: {{ source_image_delete_result }}
       when: source_image_delete_result is defined
@@ -66,8 +70,7 @@
 
     - name: Delete the dest Docker image
       community.docker.docker_image:
-        name: "{{ dest_image_full }}"
-        tag: "{{ dest_image_tag }}"
+        name: "{{ dest_image }}"
         state: absent
       register: dest_image_delete_result
       ignore_errors: true
@@ -76,8 +79,8 @@
       ansible.builtin.debug:
         msg: >
           {% if dest_image_delete_result.changed %}
-            Removed image '{{ dest_image_full }}:{{ dest_image_tag }}'
+            Removed image '{{ dest_image }}'
           {% else %}
-            Couldn't delete image '{{ dest_image_full }}:{{ dest_image_tag }}'
+            Couldn't delete image '{{ dest_image }}'
           {% endif %}
           Result: {{ dest_image_delete_result }}
