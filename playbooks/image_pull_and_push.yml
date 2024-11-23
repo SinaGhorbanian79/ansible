@@ -5,10 +5,38 @@
   become: true
   tasks:
 
+    - name: Check if image already exists
+      community.docker.docker_image_info:
+        name: "{{ source_image }}"
+      register: image_info
+
+    - name: Check_result
+      ansible.builtin.debug:
+        msg: >
+          {% if image_info is not defined or image_info.images | length == 0 %}
+            the image '{{ source_image }}' doesn't exists
+          {% else %}
+            the image '{{ source_image }}' exist
+          {% endif %}
+
+    - name: Set exists variable
+      ansible.builtin.set_fact:
+        exists: "{{ (image_info.images | length == 0) | ternary('0', '1') | trim }}"
+
+    - name: Tag the source image for backup
+      community.docker.docker_image:
+        name: "{{ source_image }}"
+        repository: "backup.{{ source_image }}"
+        source: local
+      register: tag_push_result
+      when: exists == "1"
+      ignore_errors: true
+
     - name: Pull the image
       community.docker.docker_image:
         name: "{{ source_image }}"
         source: pull
+        force_source: true
       register: pull_result
 
     - name: Pull the image result
@@ -65,7 +93,6 @@
             Image '{{ source_image }}' was already present so it won't be removed
           {% endif %}
           Result: {{ source_image_delete_result }}
-      when: source_image_delete_result is defined
       ignore_errors: true
 
     - name: Delete the dest Docker image
@@ -84,3 +111,30 @@
             Couldn't delete image '{{ dest_image }}'
           {% endif %}
           Result: {{ dest_image_delete_result }}
+
+    - name: Tag the backup to source image
+      community.docker.docker_image:
+        name: "backup.{{ source_image }}"
+        repository: "{{ source_image }}"
+        source: local
+      when: exists == "1"
+      ignore_errors: true
+
+    - name: Delete the backup image
+      community.docker.docker_image:
+        name: "backup.{{ source_image }}"
+        state: absent
+      register: backup_image_delete_result
+      when: exists == "1"
+
+    - name: Delete the dest Docker image result
+      ansible.builtin.debug:
+        msg: >
+          {% if backup_image_delete_result.changed %}
+            Removed image backup.'{{ source_image }}'
+          {% else %}
+            Couldn't delete image backup.'{{ source_image }}'
+          {% endif %}
+          Result: {{ dest_image_delete_result }}
+      when: exists == "1"
+
