@@ -1,5 +1,4 @@
 ---
-
 - name: Pull image in remote server and push it to private registry
   hosts: docker_hosts
   become: true
@@ -7,134 +6,120 @@
 
     - name: Check if image already exists
       community.docker.docker_image_info:
-        name: "{{ source_image }}"
-      register: image_info
+        name: docker.arvancloud.ir/docker:27.3-dind
+      register: dind_image_info
+      ignore_errors: true
 
     - name: Check_result
       ansible.builtin.debug:
         msg: >
-          {% if image_info is not defined or image_info.images | length == 0 %}
-            the image '{{ source_image }}' doesn't exists
+          {% if dind_image_info is not defined or dind_image_info.images | length == 0 %}
+            the dind image doesn't exists
           {% else %}
-            the image '{{ source_image }}' exist
+            the dind image exists
           {% endif %}
+      ignore_errors: true
 
     - name: Set exists variable
       ansible.builtin.set_fact:
-        exists: "{{ (image_info.images | length == 0) | ternary('0', '1') | trim }}"
-
-    - name: Tag the source image for backup
-      community.docker.docker_image:
-        name: "{{ source_image }}"
-        repository: "backup.{{ source_image }}"
-        source: local
-      register: tag_push_result
-      when: exists == "1"
+        exists: "{{ (dind_image_info.images | length == 0) | ternary('0', '1') | trim }}"
       ignore_errors: true
 
-    - name: Pull the image
+    - name: Pull Docker-in-Docker image
       community.docker.docker_image:
-        name: "{{ source_image }}"
+        name: docker.arvancloud.ir/docker:27.3-dind
         source: pull
-        force_source: true
-      register: pull_result
+      register: dind_pull_result
+      when: exists == "0"
+      ignore_errors: true
 
-    - name: Pull the image result
+    - name: Pull Docker-in-Docker image result
       ansible.builtin.debug:
-        msg: >
-          {% if pull_result.changed %}
-            The image '{{ source_image }}' didn't exist and was pulled.
-          {% else %}
-            The image '{{ source_image }}' already existed.
-          {% endif %}
-          Result: {{ pull_result }}
-
-    - name: Log in to the private registry
-      community.docker.docker_login:
-        registry_url: '{{ dest_image }}'
-        username: '{{ username }}'
-        password: '{{ password }}'
+        msg: "{{ dind_pull_result }}"
+      when: exists == "0"
       ignore_errors: true
 
-    - name: Tag and push image to target registry
-      community.docker.docker_image:
-        name: "{{ source_image }}"
-        repository: "{{ dest_image }}"
-        push: true
-        source: local
-      register: tag_push_result
+    - name: Create a dind container
+      community.docker.docker_container:
+        name: docker_in_docker_for_image_push
+        image: docker.arvancloud.ir/docker:27.3-dind
+        state: started
+        privileged: true
+      register: dind_create_result
       ignore_errors: true
 
-    - name: Tag and push image to target registry result
+    - name: Create a dind container result
       ansible.builtin.debug:
-        msg: >
-          {% if tag_push_result is succeeded or tag_push_result.changed %}
-            Image '{{ source_image }}' was tagged and pushed to '{{ dest_image }}'.
-          {% else %}
-            Couldn't tag or push image
-          {% endif %}
-          Result: {{ tag_push_result }}
+        msg: "{{ dind_create_result }}"
       ignore_errors: true
 
-    - name: Delete the source Docker image
-      community.docker.docker_image:
-        name: "{{ source_image }}"
+    - name: Wait for Docker daemon to become ready
+      ansible.builtin.command: docker exec docker_in_docker_for_image_push docker ps
+      register: result
+      until: result.rc == 0
+      retries: 10
+      delay: 3
+      ignore_errors: true
+
+    - name: Pull the desired image inside Docker-in-Docker
+      ansible.builtin.command: >
+        docker exec docker_in_docker_for_image_push docker image pull {{ source_image }}
+      register: source_pull_result
+      ignore_errors: true
+
+    - name: Source pull result
+      ansible.builtin.debug:
+        msg: "{{ source_pull_result }}"
+      ignore_errors: true
+
+    - name: Tag the image for the new repository
+      ansible.builtin.command: >
+        docker exec docker_in_docker_for_image_push docker tag {{ source_image }} {{ dest_image }}
+      register: tag_image_result
+      ignore_errors: true
+
+    - name: Tag image result
+      ansible.builtin.debug:
+        msg: "{{ tag_image_result }}"
+      ignore_errors: true
+
+    - name: Login to registry
+      ansible.builtin.shell: >
+        echo "{{ password }}" | docker exec -i docker_in_docker_for_image_push docker login --username {{ username }} --password-stdin {{ dest_image }}
+      register: docker_login_result
+      ignore_errors: true
+
+    - name: Docker login result
+      ansible.builtin.debug:
+        msg: "{{ docker_login_result }}"
+      ignore_errors: true
+
+    - name: Push the image to the new repository
+      ansible.builtin.command: >
+        docker exec docker_in_docker_for_image_push docker push {{ dest_image }}
+      register: dest_push_result
+      ignore_errors: true
+
+    - name: Dest push result
+      ansible.builtin.debug:
+        msg: "{{ dest_push_result }}"
+      ignore_errors: true
+
+    - name: Stop and remove Docker-in-docker_in_docker_for_image_push container
+      community.docker.docker_container:
+        name: docker_in_docker_for_image_push
         state: absent
-      register: source_image_delete_result
-      when: pull_result.changed
       ignore_errors: true
 
-    - name: Delete the source Docker image result
-      ansible.builtin.debug:
-        msg: >
-          {% if source_image_delete_result.changed %}
-            Removed image '{{ source_image }}'
-          {% else %}
-            Image '{{ source_image }}' was already present so it won't be removed
-          {% endif %}
-          Result: {{ source_image_delete_result }}
-      ignore_errors: true
-
-    - name: Delete the dest Docker image
+    - name: Delete the dind Docker image
       community.docker.docker_image:
-        name: "{{ dest_image }}"
+        name: docker.arvancloud.ir/docker:27.3-dind
         state: absent
-      register: dest_image_delete_result
+      register: dind_image_delete_result
+      when: exists == "0"
       ignore_errors: true
 
-    - name: Delete the dest Docker image result
+    - name: Delete the dind docker image result
       ansible.builtin.debug:
-        msg: >
-          {% if dest_image_delete_result.changed %}
-            Removed image '{{ dest_image }}'
-          {% else %}
-            Couldn't delete image '{{ dest_image }}'
-          {% endif %}
-          Result: {{ dest_image_delete_result }}
-
-    - name: Tag the backup to source image
-      community.docker.docker_image:
-        name: "backup.{{ source_image }}"
-        repository: "{{ source_image }}"
-        source: local
-      when: exists == "1"
-      ignore_errors: true
-
-    - name: Delete the backup image
-      community.docker.docker_image:
-        name: "backup.{{ source_image }}"
-        state: absent
-      register: backup_image_delete_result
-      when: exists == "1"
-
-    - name: Delete the dest Docker image result
-      ansible.builtin.debug:
-        msg: >
-          {% if backup_image_delete_result.changed %}
-            Removed image backup.'{{ source_image }}'
-          {% else %}
-            Couldn't delete image backup.'{{ source_image }}'
-          {% endif %}
-          Result: {{ dest_image_delete_result }}
-      when: exists == "1"
-
+        msg: "{{ dind_image_delete_result }}"
+      when: exists == "0"

@@ -40,7 +40,7 @@ if [ -z $source_image_tag ]; then
 	source_image_tag="latest"
 fi
 
-ansible-playbook -i ./inventory/inventory.yml ./playbooks/image_pull_and_push.yml \
+ansible-playbook -i ./inventory/inventory.yml ./playbooks/new.yml \
     -e "source_image=$source_image" \
     -e "dest_image=$dest_image" \
 	-e "username=$username" \
