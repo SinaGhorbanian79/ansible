@@ -1,0 +1,57 @@
+---
+- name: Filehanlder deploy stage
+  hosts: docker_hosts
+  become: true
+  tasks:
+
+    - name: Check if filehandler Container exists
+      community.docker.docker_container_info:
+        name: filehandler
+      register: container_info
+
+    - name: Stop the container
+      community.docker.docker_container:
+        name: filehandler
+        state: absent
+      when: container_info.exists
+
+    - name: Check if image already exists
+      community.docker.docker_image_info:
+        name: "{{ image }}:{{ tag }}"
+      register: image_exists_info
+
+    - name: Check_result
+      ansible.builtin.debug:
+        msg: >
+          {% if image_exists_info is not defined or image_exists_info.images | length == 0 %}
+            the image doesn't exists
+          {% else %}
+            the image exists
+          {% endif %}
+
+    - name: Set exists variable
+      ansible.builtin.set_fact:
+        exists: "{{ (image_exists_info.images | length == 0) | ternary('0', '1') | trim }}"
+
+    - name: Remove the Docker image
+      community.docker.docker_image:
+        name: "{{ image }}:{{ tag }}"
+        state: absent
+      when: exists == "1"
+
+    - name: Login to Docker registry
+      community.docker.docker_login:
+        registry: "hub.gap.im"
+        username: "sina-ghorbani"
+        password: "{{ password }}"
+
+    - name: Pull the new image
+      community.docker.docker_image:
+        name: "{{ image }}:{{ tag }}"
+        source: pull
+
+    - name: Run the image
+      community.docker.docker_container:
+        name: filehandler
+        image: "{{ image }}:{{ tag }}"
+        state: started
