@@ -1,0 +1,12 @@
+---
+- name: Install openvpn
+  ansible.builtin.apt:
+    update_cache: true
+    name: openvpn
+  register: openvpn_install_log
+  become: true
+
+- name: Installation log
+  ansible.builtin.debug:
+    var: openvpn_install_log
+

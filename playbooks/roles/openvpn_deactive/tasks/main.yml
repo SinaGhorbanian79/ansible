@@ -1,0 +1,11 @@
+---
+- name: Stop OpenVPN service
+  ansible.builtin.systemd_service:
+    name: openvpn
+    state: stopped
+  register: openvpn_stop_log
+
+- name: Stop OpenVPN service log
+  ansible.builtin.debug:
+    var: openvpn_stop_log
+

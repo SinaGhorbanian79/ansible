@@ -1,0 +1,48 @@
+---
+- name: Get latest Harbor release info from GitHub
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/goharbor/harbor/releases/latest
+    return_content: yes
+  register: harbor_release_info
+
+- name: Set Harbor version variable
+  ansible.builtin.set_fact:
+    harbor_version: "{{ harbor_release_info.json.tag_name }}"
+
+- name: Download latest Harbor offline installer
+  ansible.builtin.get_url:
+    url: "https://github.com/goharbor/harbor/releases/download/{{ harbor_version }}/harbor-offline-installer-{{ harbor_version }}.tgz"
+    dest: "/tmp/harbor-offline-installer-{{ harbor_version }}.tgz"
+    timeout: 60
+  register: harbor_offline_installer_download_log
+
+- name: Download latest Harbor offline installer log
+  ansible.builtin.debug:
+    var: harbor_offline_installer_download_log
+
+- name: Extract archive
+  ansible.builtin.unarchive:
+    src: "/tmp/harbor-offline-installer-{{ harbor_version }}.tgz"
+    dest: "/tmp/harbor"
+    remote_src: yes
+  register: extract_harbor_log
+
+- name: Extract archive log
+  ansible.builtin.debug:
+    var: extract_harbor_log
+
+- name: Copy and rename harbor.yml
+      ansible.builtin.copy:
+        remote_src: yes
+        src: "/tmp/harbor/harbor.yml.tmpl"
+        dest: "/tmp/harbor/harbor.yml"
+
+- name: Update hostname in harbor.yml
+  ansible.builtin.lineinfile:
+    path: /tmp/harbor/harbor.yml
+    regexp: '^hostname:\s*reg\.mydomain\.com\s*$'
+    line: 'hostname: {{ harbor_hostname }}'
+    backup: yes
+
+- name: Run harbor installation script
+  ansible.builtin.

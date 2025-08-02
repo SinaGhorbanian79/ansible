@@ -1,0 +1,5 @@
+- name: Install Harbor on Registry Host
+  hosts: registries
+  become: yes
+  roles:
+    - harbor_install
