@@ -1,1 +1,1 @@
-deb [arch={{ os_architecture.stdout }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable
+deb [arch={{ os_architecture.stdout }} signed-by={{ docker_keyring }}] https://download.docker.com/linux/ubuntu jammy stable

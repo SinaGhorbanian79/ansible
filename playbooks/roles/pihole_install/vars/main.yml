@@ -1,0 +1,2 @@
+---
+docker_compose_file: "/etc/ansible/playbooks/roles/pihole_install/files/docker-compose.yml"

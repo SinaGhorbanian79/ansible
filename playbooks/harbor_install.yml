@@ -2,4 +2,8 @@
   hosts: registries
   become: yes
   roles:
+    - openvpn_install
+    - openvpn_configure
+    - docker_install
+    - openvpn_deactive
     - harbor_install

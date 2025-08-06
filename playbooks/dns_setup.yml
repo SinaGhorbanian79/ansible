@@ -1,0 +1,5 @@
+- name: Install pi-hole on dns-server Host
+  hosts: dns-servers
+  become: yes
+  roles:
+    - pihole_install

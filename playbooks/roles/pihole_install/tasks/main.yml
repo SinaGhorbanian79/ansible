@@ -1,0 +1,34 @@
+---
+- name: Create Pihole directory structure
+  ansible.builtin.file:
+    path: "/opt/pihole/"
+    state: directory
+    mode: '0755'
+  register: Create_Pihole_directory_structure
+
+- name: Create Pihole directory structure log
+  ansible.builtin.debug:
+    var: Create_Pihole_directory_structure
+
+- name: Copy docker-compose file to remote server
+  ansible.builtin.copy:
+    src: "{{ docker_compose_file }}"
+    dest: /opt/pihole/
+    owner: root
+    group: root
+    mode: '0644'
+  register: copy_file_log
+
+- name: Copy docker-compose file to remote server log
+  ansible.builtin.debug:
+    var: copy_file_log
+
+- name: Start Pihole with Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: /opt/pihole
+    state: present
+  register: pihole_start_log
+
+- name: Pihole start log
+  ansible.builtin.debug:
+    var: pihole_start_log

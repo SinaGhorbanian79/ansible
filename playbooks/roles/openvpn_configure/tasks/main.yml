@@ -1,6 +1,11 @@
 ---
+- name: Check if OpenVPN config exists
+  stat:
+    path: /etc/openvpn/client/test.ovpn
+  register: file_status
+
 - name: Delete the file if it exists
-  file:
+  ansible.builtin.file:
     path: /etc/openvpn/client/test.ovpn
     state: absent
   when: file_status.stat.exists
@@ -13,7 +18,7 @@
 - name: Copy .ovpn file to remote server
   ansible.builtin.copy:
     src: "{{ ovpn_file }}"
-    dest: /etc/openvpn/client/test.ovpn
+    dest: /etc/openvpn/client/test.conf
     owner: root
     group: root
     mode: '0644'
@@ -33,13 +38,17 @@
   ansible.builtin.debug:
     var: openvpn_start_log
 
-- name: Set DNS for tun0 using resolvectl
-  ansible.builtin.command: resolvectl dns tun0 8.8.8.8
+- name: Configure resolvectl for tun0
+  ansible.builtin.command: "{{ item }}"
   become: yes
+  loop:
+    - resolvectl dns tun0 8.8.8.8
+    - resolvectl domain tun0 ~
+  register: configure_resolvectl_for_tun0_log
 
-- name: Set routing domain for tun0 using resolvectl
-  ansible.builtin.command: resolvectl domain tun0 ~
-  become: yes
+- name: Configure resolvectl for tun0 log
+  ansible.builtin.debug:
+    var: configure_resolvectl_for_tun0_log
 
 - name: Restart systemd resolved service
   ansible.builtin.systemd:

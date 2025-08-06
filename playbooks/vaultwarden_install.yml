@@ -1,0 +1,6 @@
+- name: Install vaultwarden on vault Host
+  hosts: vaults
+  become: yes
+  roles:
+    - docker_install
+    - vaultwarden_install

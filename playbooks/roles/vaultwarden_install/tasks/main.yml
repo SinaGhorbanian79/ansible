@@ -1,0 +1,41 @@
+---
+- name: Ensure python3-pip is installed
+  become: yes
+  ansible.builtin.apt:
+    name: python3-pip
+    state: present
+    update_cache: yes
+
+- name: Install docker and docker-compose Python modules
+  become: yes
+  pip:
+    name:
+      - 'docker<7.0.0'
+      - docker-compose
+
+- name: Create Vaultwarden directory structure
+  ansible.builtin.file:
+    path: "/opt/vaultwarden/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - ""
+    - "data"
+
+- name: Copy docker-compose file to remote server
+  ansible.builtin.copy:
+    src: /etc/ansible/playbooks/roles/vaultwarden_install/files/docker-compose.yml
+    dest: /opt/vaultwarden/
+    owner: root
+    group: root
+    mode: '0644'
+  register: copy_file_log
+
+- name: Copy docker-compose file to remote server log
+  ansible.builtin.debug:
+    var: copy_file_log
+
+- name: Start Vaultwarden with Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: /opt/vaultwarden
+    state: present

@@ -11,19 +11,19 @@
 
 - name: Download latest Harbor offline installer
   ansible.builtin.get_url:
-    url: "https://github.com/goharbor/harbor/releases/download/{{ harbor_version }}/harbor-offline-installer-{{ harbor_version }}.tgz"
-    dest: "/tmp/harbor-offline-installer-{{ harbor_version }}.tgz"
-    timeout: 60
-  register: harbor_offline_installer_download_log
+    url: "https://github.com/goharbor/harbor/releases/download/{{ harbor_version }}/harbor-online-installer-{{ harbor_version }}.tgz"
+    dest: "/tmp/harbor-online-installer-{{ harbor_version }}.tgz"
+    timeout: 600
+  register: harbor_online_installer_download_log
 
-- name: Download latest Harbor offline installer log
+- name: Download latest Harbor online installer log
   ansible.builtin.debug:
-    var: harbor_offline_installer_download_log
+    var: harbor_online_installer_download_log
 
 - name: Extract archive
   ansible.builtin.unarchive:
-    src: "/tmp/harbor-offline-installer-{{ harbor_version }}.tgz"
-    dest: "/tmp/harbor"
+    src: "/tmp/harbor-online-installer-{{ harbor_version }}.tgz"
+    dest: "/tmp"
     remote_src: yes
   register: extract_harbor_log
 
@@ -32,10 +32,10 @@
     var: extract_harbor_log
 
 - name: Copy and rename harbor.yml
-      ansible.builtin.copy:
-        remote_src: yes
-        src: "/tmp/harbor/harbor.yml.tmpl"
-        dest: "/tmp/harbor/harbor.yml"
+  ansible.builtin.copy:
+    remote_src: yes
+    src: "/tmp/harbor/harbor.yml.tmpl"
+    dest: "/tmp/harbor/harbor.yml"
 
 - name: Update hostname in harbor.yml
   ansible.builtin.lineinfile:
@@ -44,5 +44,19 @@
     line: 'hostname: {{ harbor_hostname }}'
     backup: yes
 
-- name: Run harbor installation script
-  ansible.builtin.
+- name: Comment out https section in harbor.yml
+  ansible.builtin.replace:
+    path: /tmp/harbor/harbor.yml
+    regexp: '^(https:|  port: 443|  certificate: .+|  private_key: .+)$'
+    replace: '# \1'
+
+- name: Run harbor install script
+  become: true
+  shell: /tmp/harbor/install.sh
+  args:
+    executable: /bin/bash
+  register: harbor_install_script_log
+
+- name: Harbor install script log
+  ansible.builtin.debug:
+    var: harbor_install_script_log

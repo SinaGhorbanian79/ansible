@@ -1,0 +1,12 @@
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    environment:
+      DOMAIN: "https://vault.farazdev.company"
+      ADMIN_TOKEN: "5AGPrvUoweS23L"
+    volumes:
+      - ./vw-data/:/data/
+    ports:
+      - 8000:80
