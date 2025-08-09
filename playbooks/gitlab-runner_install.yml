@@ -1,0 +1,7 @@
+- name: Install gitlab-runner on runner Host
+  hosts: runner1
+  become: yes
+  roles:
+    - docker_install
+    - gitlab_runner_install
+

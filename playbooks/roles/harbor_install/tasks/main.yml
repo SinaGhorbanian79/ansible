@@ -9,10 +9,10 @@
   ansible.builtin.set_fact:
     harbor_version: "{{ harbor_release_info.json.tag_name }}"
 
-- name: Download latest Harbor offline installer
+- name: Download latest Harbor online installer
   ansible.builtin.get_url:
     url: "https://github.com/goharbor/harbor/releases/download/{{ harbor_version }}/harbor-online-installer-{{ harbor_version }}.tgz"
-    dest: "/tmp/harbor-online-installer-{{ harbor_version }}.tgz"
+    dest: "/opt/harbor-online-installer-{{ harbor_version }}.tgz"
     timeout: 600
   register: harbor_online_installer_download_log
 
@@ -22,8 +22,8 @@
 
 - name: Extract archive
   ansible.builtin.unarchive:
-    src: "/tmp/harbor-online-installer-{{ harbor_version }}.tgz"
-    dest: "/tmp"
+    src: "/opt/harbor-online-installer-{{ harbor_version }}.tgz"
+    dest: "/opt"
     remote_src: yes
   register: extract_harbor_log
 
@@ -34,25 +34,25 @@
 - name: Copy and rename harbor.yml
   ansible.builtin.copy:
     remote_src: yes
-    src: "/tmp/harbor/harbor.yml.tmpl"
-    dest: "/tmp/harbor/harbor.yml"
+    src: "/opt/harbor/harbor.yml.tmpl"
+    dest: "/opt/harbor/harbor.yml"
 
 - name: Update hostname in harbor.yml
   ansible.builtin.lineinfile:
-    path: /tmp/harbor/harbor.yml
+    path: /opt/harbor/harbor.yml
     regexp: '^hostname:\s*reg\.mydomain\.com\s*$'
     line: 'hostname: {{ harbor_hostname }}'
     backup: yes
 
 - name: Comment out https section in harbor.yml
   ansible.builtin.replace:
-    path: /tmp/harbor/harbor.yml
+    path: /opt/harbor/harbor.yml
     regexp: '^(https:|  port: 443|  certificate: .+|  private_key: .+)$'
     replace: '# \1'
 
 - name: Run harbor install script
   become: true
-  shell: /tmp/harbor/install.sh
+  shell: /opt/harbor/install.sh
   args:
     executable: /bin/bash
   register: harbor_install_script_log

@@ -1,0 +1,61 @@
+---
+- name: Create certs directory
+  ansible.builtin.file:
+    path: /srv/gitlab-runner/certs
+    state: directory
+    mode: '0755'
+    recurse: yes
+  register: cert_directory_log
+
+- name: Create certs directory log
+  ansible.builtin.debug:
+    var: cert_directory_log
+
+- name: Copy cert file to remote server
+  ansible.builtin.copy:
+    src: /etc/ansible/playbooks/roles/gitlab_runner_install/files/gitlab.farazdev.company.crt
+    dest: /srv/gitlab-runner/certs/gitlab.farazdev.company.crt
+    owner: root
+    group: root
+    mode: '0644'
+  register: copy_certfile_log
+
+- name: Copy cert file to remote server log
+  ansible.builtin.debug:
+    var: copy_certfile_log
+
+- name: Create docker-compose directory
+  ansible.builtin.file:
+    path: /opt/gitlab-runner
+    state: directory
+    mode: '0755'
+    recurse: yes
+  register: compose_directory_log
+
+- name: Create docker-compose directory log
+  ansible.builtin.debug:
+    var: compose_directory_log
+
+- name: Copy docker-compose file to remote server
+  ansible.builtin.copy:
+    src: /etc/ansible/playbooks/roles/gitlab_runner_install/files/docker-compose.yml
+    dest: /opt/gitlab-runner/
+    owner: root
+    group: root
+    mode: '0644'
+  register: copy_compose_log
+
+- name: Copy compose file to remote server log
+  ansible.builtin.debug:
+    var: copy_compose_log
+
+- name: Start gitlab-runner with Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: /opt/gitlab-runner
+    state: present
+  register: runner_start_log
+
+- name: gitlab-runner start log
+  ansible.builtin.debug:
+    var: runner_start_log
+

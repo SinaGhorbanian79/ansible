@@ -21,4 +21,18 @@ all:
                     ansible_user: ansible
                     ansible_port: 22
                     ansible_ssh_private_key_file: /root/.ssh/id_ed25519
+        runners:
+          hosts:
+                runner1:
+                    ansible_host: 192.168.168.134
+                    ansible_user: ansible
+                    ansible_port: 22
+                    ansible_ssh_private_key_file: /root/.ssh/id_ed25519
 
+        viralife:
+          hosts:
+                viralife-dev:
+                    ansible_host: 192.168.168.104
+                    ansible_user: ansible
+                    ansible_port: 22
+                    ansible_ssh_private_key_file: /root/.ssh/id_ed25519
