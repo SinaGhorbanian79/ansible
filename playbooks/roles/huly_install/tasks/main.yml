@@ -1,0 +1,13 @@
+---
+- name: Install nginx
+  ansible.builtin.apt:
+    update_cache: true
+    name: nginx
+  register: nginx_install_log
+  become: true
+
+- name: Installation log
+  ansible.builtin.debug:
+    var: nginx_install_log
+
+

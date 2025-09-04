@@ -1,0 +1,6 @@
+- name: Install docker on Host
+  hosts: hoppscotch_1
+  become: yes
+  roles:
+    - docker_install
+

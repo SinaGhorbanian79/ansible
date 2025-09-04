@@ -1,0 +1,15 @@
+ssh_users:
+  sina:
+    key: "{{ lookup('file', 'keys/sina.pub') }}"
+  saeed:
+    key: "{{ lookup('file', 'keys/saeed.pub') }}"
+  davood:
+    key: "{{ lookup('file', 'keys/davood.pub') }}"
+  pourya:
+    key: "{{ lookup('file', 'keys/pourya.pub') }}"
+  mehdi:
+    key: "{{ lookup('file', 'keys/mehdi.pub') }}"
+# Users that always have access to all servers
+global_allowed_users:
+  - sina
+  - saeed

@@ -1,0 +1,5 @@
+{% for user in effective_users | unique %}
+# {{ user }} ADDED BY ANSIBLE
+{{ lookup('file', 'keys/' ~ user ~ '.pub') }}
+{% endfor %}
+

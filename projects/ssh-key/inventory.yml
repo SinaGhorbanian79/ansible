@@ -1,0 +1,52 @@
+all:
+  vars:
+    ansible_user: ansible
+    ansible_port: 22
+    ansible_ssh_private_key_file: /root/.ssh/id_ed25519
+
+  children:
+    vaults:
+      hosts:
+        vault:
+          ansible_host: 192.168.168.132
+    registries:
+      hosts:
+        harbor:
+          ansible_host: 192.168.168.128
+    dns-servers:
+      hosts:
+        dns-server_1:
+          ansible_host: 192.168.168.124
+    runners:
+      hosts:
+        runner_1:
+          ansible_host: 192.168.168.134
+    viralife:
+      hosts:
+        viralife-dev:
+          ansible_host: 192.168.168.104
+    gateways:
+      hosts:
+        gateway_1:
+          ansible_host: 192.168.168.126
+    gitlab:
+      hosts:
+        gitlab_1:
+          ansible_host: 192.168.168.101
+    vpn:
+      hosts:
+        vpn_1:
+          ansible_host: 192.168.168.122
+    vpngateway:
+      hosts:
+        vpngateway_1:
+          ansible_host: 192.168.168.146
+    hoppscotch:
+      hosts:
+        hoppscotch_1:
+          ansible_host: 192.168.168.149
+    huly:
+      hosts:
+        huly_1:
+          ansible_host: 192.168.168.148
+

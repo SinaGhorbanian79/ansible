@@ -1,0 +1,21 @@
+---
+- name: Manage SSH keys on all servers
+  hosts: all
+  become: yes
+
+  vars:
+    # Merge users from global, group, and host level
+    effective_users: >-
+      {{ (global_allowed_users | default([]))
+         + (group_allowed_users | default([]))
+         + (allowed_users | default([])) }}
+
+  tasks:
+    - name: Deploy custom authorized_keys with comments
+      template:
+        src: authorized_keys.j2
+        dest: /root/.ssh/authorized_keys
+        owner: root
+        group: root
+        mode: '0600'
+
