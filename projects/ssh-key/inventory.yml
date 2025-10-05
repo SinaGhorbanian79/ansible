@@ -5,10 +5,6 @@ all:
     ansible_ssh_private_key_file: /root/.ssh/id_ed25519
 
   children:
-    vaults:
-      hosts:
-        vault:
-          ansible_host: 192.168.168.132
     registries:
       hosts:
         harbor:
@@ -21,32 +17,48 @@ all:
       hosts:
         runner_1:
           ansible_host: 192.168.168.134
-    viralife:
+    vira:
       hosts:
-        viralife-dev:
+        vira-dev:
           ansible_host: 192.168.168.104
     gateways:
       hosts:
         gateway_1:
           ansible_host: 192.168.168.126
-    gitlab:
+    gitlabs:
       hosts:
         gitlab_1:
           ansible_host: 192.168.168.101
-    vpn:
+    vpns:
       hosts:
         vpn_1:
           ansible_host: 192.168.168.122
-    vpngateway:
-      hosts:
-        vpngateway_1:
-          ansible_host: 192.168.168.146
-    hoppscotch:
-      hosts:
-        hoppscotch_1:
-          ansible_host: 192.168.168.149
-    huly:
+    hulys:
       hosts:
         huly_1:
           ansible_host: 192.168.168.148
-
+    ansibles:
+      hosts:
+        ansible_1:
+          ansible_connection: local
+    raya:
+      hosts:
+        raya-dev:
+          ansible_host: 192.168.168.137
+        raya-docker:
+          ansible_host: 192.168.168.150
+    
+    worklog:
+      hosts:
+        worklog-dev:
+          ansible_host: 192.168.168.123
+     
+    crss:
+      hosts:
+        crs_1:
+          ansible_host: 192.168.168.125
+    
+    hotel-api:
+      hosts:
+        hotel-api_1:
+          ansible_host: 192.168.168.129
